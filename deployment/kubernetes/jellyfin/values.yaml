@@ -1,0 +1,48 @@
+app:
+  name: jellyfin
+
+deployment:
+  name: jellyfin
+  replicas: 1
+
+container:
+  name: jellyfin
+  image: jellyfin/jellyfin
+  tag: latest
+  imagePullPolicy: IfNotPresent
+  port: 8096
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+  volumeMounts:
+    - mountPath: /config
+      subPath: /location_on_nfs
+    - mountPath: /cache
+      subPath: /location_on_nfs
+    - mountPath: /media
+      subPath: ""
+  env:
+    - name: TZ
+      value: America/Denver
+
+service:
+  name: jellyfin-service
+  ports:
+    http:
+      port: 443
+      targetPort: 8096
+      protocol: TCP
+
+volumes:
+  name: data
+  nfs:
+    server: 192.168.x.x
+    path: /nfs_share
+
+ingress:
+  enabled: true
+  name: jellyfin-ingress
+  className: nginx
+  host: jellyfin.domain.com
+  path: /
+  tlsSecret: jellyfin-tls
